@@ -22,7 +22,7 @@
   its documentation for any purpose.
 
   YOU FURTHER ACKNOWLEDGE AND AGREE THAT THE SOFTWARE AND DOCUMENTATION ARE
-  PROVIDED ìAS ISî WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+  PROVIDED ‚ÄúAS IS‚Äù WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED,
   INCLUDING WITHOUT LIMITATION, ANY WARRANTY OF MERCHANTABILITY, TITLE,
   NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT SHALL
   TEXAS INSTRUMENTS OR ITS LICENSORS BE LIABLE OR OBLIGATED UNDER CONTRACT,
@@ -267,7 +267,7 @@ typedef struct
 {
   uint16 result; // Result
 } l2capParamUpdateRsp_t;
-
+/*
 // Union of all L2CAP Signaling commands
 typedef union
 {
@@ -281,6 +281,23 @@ typedef union
   l2capEchoRsp_t echoRsp;
   l2capInfoRsp_t infoRsp;
   l2capParamUpdateRsp_t updateRsp;
+} l2capSignalCmd_t;
+*/
+typedef union
+{
+	// Requests
+ typedef struct{ 
+  l2capEchoReq_t echoReq;
+  l2capInfoReq_t infoReq;
+  l2capParamUpdateReq_t updateReq;
+ }l2capSignalCmd_Request_t;
+  // Responses
+  typedef struct{
+  l2capCmdReject_t cmdReject;
+  l2capEchoRsp_t echoRsp;
+  l2capInfoRsp_t infoRsp;
+  l2capParamUpdateRsp_t updateRsp;
+  }l2capSignalCmd_Response_t;
 } l2capSignalCmd_t;
 
 // OSAL L2CAP_SIGNAL_EVENT message format. This message is used to deliver an
