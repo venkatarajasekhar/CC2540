@@ -22,7 +22,7 @@
   its documentation for any purpose.
 
   YOU FURTHER ACKNOWLEDGE AND AGREE THAT THE SOFTWARE AND DOCUMENTATION ARE
-  PROVIDED ìAS ISî WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+  PROVIDED ‚ÄúAS IS‚Äù WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED,
   INCLUDING WITHOUT LIMITATION, ANY WARRANTY OF MERCHANTABILITY, TITLE,
   NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT SHALL
   TEXAS INSTRUMENTS OR ITS LICENSORS BE LIABLE OR OBLIGATED UNDER CONTRACT,
@@ -264,7 +264,8 @@ static void thermometerSendStoredMeas();
 
 static void thermometerProcessGattMsg( gattMsgEvent_t *pMsg );
 static void thermometer_ProcessOSALMsg( osal_event_hdr_t *pMsg );
-static void peripheralStateNotificationCB( gaprole_States_t newState );
+//static void peripheralStateNotificationCB( gaprole_States_t newState );
+static void peripheralStateNotificationCB( gaprole_States_t *newState );
 static void performPeriodicTask( void );
 static void performPeriodicImeasTask( void );
 static void thermometer_HandleKeys( uint8 shift, uint8 keys );
@@ -772,11 +773,12 @@ static void timeAppDisconnected( void )
  *
  * @return  none
  */
-static void peripheralStateNotificationCB( gaprole_States_t newState )
+//static void peripheralStateNotificationCB( gaprole_States_t newState )
+static void peripheralStateNotificationCB( gaprole_States_t* newState )
 {
  
   // if connected
-  if ( newState == GAPROLE_CONNECTED )
+  if ( *newState == GAPROLE_CONNECTED )
   {
     linkDBItem_t  *pItem;
 
@@ -821,7 +823,7 @@ static void peripheralStateNotificationCB( gaprole_States_t newState )
   }
   // if disconnected
   else if ( gapProfileState == GAPROLE_CONNECTED && 
-            newState != GAPROLE_CONNECTED )
+            *newState != GAPROLE_CONNECTED )
   {
     timeAppDisconnected();
     
@@ -830,13 +832,13 @@ static void peripheralStateNotificationCB( gaprole_States_t newState )
     
   }    
   // if started
-  else if ( newState == GAPROLE_STARTED )
+  else if ( *newState == GAPROLE_STARTED )
   {
     // Initialize time clock 
     timeAppClockInit();
   }
   
-  gapProfileState = newState;
+  gapProfileState = *newState;
   
   updateUI();
   
