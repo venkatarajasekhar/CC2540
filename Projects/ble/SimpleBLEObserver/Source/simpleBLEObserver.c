@@ -22,7 +22,7 @@
   its documentation for any purpose.
 
   YOU FURTHER ACKNOWLEDGE AND AGREE THAT THE SOFTWARE AND DOCUMENTATION ARE
-  PROVIDED ìAS ISî WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+  PROVIDED ‚ÄúAS IS‚Äù WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED,
   INCLUDING WITHOUT LIMITATION, ANY WARRANTY OF MERCHANTABILITY, TITLE,
   NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT SHALL
   TEXAS INSTRUMENTS OR ITS LICENSORS BE LIABLE OR OBLIGATED UNDER CONTRACT,
@@ -40,7 +40,7 @@
 /*********************************************************************
  * INCLUDES
  */
-
+#include <string.h>
 #include "bcomdef.h"
 #include "OSAL.h"
 #include "OSAL_PwrMgr.h"
@@ -50,7 +50,6 @@
 #include "hal_lcd.h"
 #include "ll.h"
 #include "hci.h"
-
 #include "observer.h"
 
 #include "simpleBLEObserver.h"
@@ -328,18 +327,21 @@ static void simpleBLEObserver_HandleKeys( uint8 shift, uint8 keys )
  */
 static void simpleBLEObserverEventCB( gapObserverRoleEvent_t *pEvent )
 {
-  switch ( pEvent->gap.opcode )
+  uint8 NumOfBytes = sizeof(gapObserverRoleEvent_t *);
+  gapObserverRoleEvent_t pGapObRoleEvt[1];
+  memcpy(&(const gapObserverRoleEvent_t*)pGapObRoleEvt,(gapObserverRoleEvent_t *)pEvent,NumOfBytes);
+  switch ( pGapObRoleEvt[0].gap.opcode )
   {
     case GAP_DEVICE_INIT_DONE_EVENT:  
       {
         LCD_WRITE_STRING( "BLE Observer", HAL_LCD_LINE_1 );
-        LCD_WRITE_STRING( bdAddr2Str( pEvent->initDone.devAddr ),  HAL_LCD_LINE_2 );
+        LCD_WRITE_STRING( bdAddr2Str( pGapObRoleEvt[0].initDone.devAddr ),  HAL_LCD_LINE_2 );
       }
       break;
 
     case GAP_DEVICE_INFO_EVENT:
       {
-        simpleBLEAddDeviceInfo( pEvent->deviceInfo.addr, pEvent->deviceInfo.addrType );
+        simpleBLEAddDeviceInfo( pGapObRoleEvt[0].deviceInfo.addr, pGapObRoleEvt[0].deviceInfo.addrType );
       }
       break;
       
@@ -349,9 +351,9 @@ static void simpleBLEObserverEventCB( gapObserverRoleEvent_t *pEvent )
         simpleBLEScanning = FALSE;
 
         // Copy results
-        simpleBLEScanRes = pEvent->discCmpl.numDevs;
-        osal_memcpy( simpleBLEDevList, pEvent->discCmpl.pDevList,
-                     (sizeof( gapDevRec_t ) * pEvent->discCmpl.numDevs) );
+        simpleBLEScanRes = pGapObRoleEvt[0].discCmpl.numDevs;
+        osal_memcpy( simpleBLEDevList, pGapObRoleEvt[0].discCmpl.pDevList,
+                     (sizeof( gapDevRec_t ) * pGapObRoleEvt[0].discCmpl.numDevs) );
         
         LCD_WRITE_STRING_VALUE( "Devices Found", simpleBLEScanRes,
                                 10, HAL_LCD_LINE_1 );
