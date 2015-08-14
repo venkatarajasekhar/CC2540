@@ -23,7 +23,7 @@
   its documentation for any purpose.
 
   YOU FURTHER ACKNOWLEDGE AND AGREE THAT THE SOFTWARE AND DOCUMENTATION ARE
-  PROVIDED ìAS ISî WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+  PROVIDED ‚ÄúAS IS‚Äù WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED,
   INCLUDING WITHOUT LIMITATION, ANY WARRANTY OF MERCHANTABILITY, TITLE,
   NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT SHALL
   TEXAS INSTRUMENTS OR ITS LICENSORS BE LIABLE OR OBLIGATED UNDER CONTRACT,
@@ -63,6 +63,7 @@
 #include "bloodPressure.h"
 #include "timeapp.h"
 #include "OSAL_Clock.h"
+#include <memory.h>
 
 /*********************************************************************
  * MACROS
@@ -625,18 +626,25 @@ uint16 BloodPressure_ProcessEvent( uint8 task_id, uint16 events )
  */
 static void bloodPressure_ProcessOSALMsg( osal_event_hdr_t *pMsg )
 {
-  switch ( pMsg->event )
+  uint8 NumofBytes = sizeof(osal_event_hdr_t *);
+  osal_event_hdr_t pMsgEvtHdr[1];
+  memcpy((const* pMsgEvtHdr),(osal_event_hdr_t *)pMsg,NumofBytes);
+ 
+  if(pMsgEvtHdr){
+  switch ( pMsgEvtHdr->event )
   {
   case KEY_CHANGE:
-      bloodPressure_HandleKeys( ((keyChange_t *)pMsg)->state, ((keyChange_t *)pMsg)->keys );
+      bloodPressure_HandleKeys( ((keyChange_t *)pMsgEvtHdr)->state, ((keyChange_t *)pMsgEvtHdr)->keys );
       break;
  
   case GATT_MSG_EVENT:
-      bloodPressureProcessGattMsg( (gattMsgEvent_t *) pMsg );
+      bloodPressureProcessGattMsg( (gattMsgEvent_t *) pMsgEvtHdr );
       break;
   default:
       break;
   }
+}
+  
 }
 
 /*********************************************************************
@@ -1115,7 +1123,7 @@ static void cuffMeas(void)
   *p++ = flags;
 
   //bloodpressure components 
-  // IEEE The 16ñbit value contains a 4-bit exponent to base 10, 
+  // IEEE The 16‚Äìbit value contains a 4-bit exponent to base 10, 
   // followed by a 12-bit mantissa. Each is in twoscomplementform.
   *p++ = bpSystolic;  //120 = 0x0078  SFloat little endian = 0x7800 
   *p++;
