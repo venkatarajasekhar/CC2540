@@ -22,7 +22,7 @@
   its documentation for any purpose.
 
   YOU FURTHER ACKNOWLEDGE AND AGREE THAT THE SOFTWARE AND DOCUMENTATION ARE
-  PROVIDED “AS IS?WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+  PROVIDED â€œAS IS?WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED,
   INCLUDING WITHOUT LIMITATION, ANY WARRANTY OF MERCHANTABILITY, TITLE,
   NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT SHALL
   TEXAS INSTRUMENTS OR ITS LICENSORS BE LIABLE OR OBLIGATED UNDER CONTRACT,
@@ -130,7 +130,7 @@
 #define DEFAULT_DEV_DISC_BY_SVC_UUID          TRUE
 
 // Application states
-enum
+enum BleAppStatus
 {
   BLE_STATE_IDLE,
   BLE_STATE_CONNECTING,
@@ -139,7 +139,7 @@ enum
 };
 
 // Discovery states
-enum
+enum BleDisStatus
 {
   BLE_DISC_STATE_IDLE,                // Idle
   BLE_DISC_STATE_SVC,                 // Service discovery
@@ -327,12 +327,12 @@ void SimpleBLECentral_Init( uint8 task_id )
  */
 uint16 SimpleBLECentral_ProcessEvent( uint8 task_id, uint16 events )
 {
-  
+  uint8 *pMsg = NULL;
   VOID task_id; // OSAL required parameter that isn't used in this function
   
   if ( events & SYS_EVENT_MSG )
   {
-    uint8 *pMsg;
+   
 
     if ( (pMsg = osal_msg_receive( simpleBLETaskId )) != NULL )
     {
@@ -379,16 +379,20 @@ uint16 SimpleBLECentral_ProcessEvent( uint8 task_id, uint16 events )
  */
 static void simpleBLECentral_ProcessOSALMsg( osal_event_hdr_t *pMsg )
 {
-  switch ( pMsg->event )
+  osal_event_hdr_t *pMessage = pMsg;
+  if(pMessage){
+  switch ( pMessage->event )
   {
     case KEY_CHANGE:
-      simpleBLECentral_HandleKeys( ((keyChange_t *)pMsg)->state, ((keyChange_t *)pMsg)->keys );
+      simpleBLECentral_HandleKeys( ((keyChange_t *)pMessage)->state, ((keyChange_t *)pMessage)->keys );
       break;
 
     case GATT_MSG_EVENT:
-      simpleBLECentralProcessGATTMsg( (gattMsgEvent_t *) pMsg );
+      simpleBLECentralProcessGATTMsg( (gattMsgEvent_t *) pMessage );
       break;
   }
+}
+return;
 }
 
 /*********************************************************************
@@ -407,7 +411,10 @@ uint8 gStatus;
 static void simpleBLECentral_HandleKeys( uint8 shift, uint8 keys )
 {
   (void)shift;  // Intentionally unreferenced parameter
-
+  uint8 status;
+  uint8 addrType;
+  uint8 *peerAddr;
+    
   if ( keys & HAL_KEY_UP )
   {
     // Start or stop discovery
@@ -430,12 +437,10 @@ static void simpleBLECentral_HandleKeys( uint8 shift, uint8 keys )
         GAPCentralRole_CancelDiscovery();
       }
     }
-    else if ( simpleBLEState == BLE_STATE_CONNECTED &&
-              simpleBLECharHdl != 0 &&
-              simpleBLEProcedureInProgress == FALSE )
+    else if ( (simpleBLEState == BLE_STATE_CONNECTED ) &&
+              (simpleBLECharHdl != 0) &&
+              (simpleBLEProcedureInProgress == FALSE ))
     {
-      uint8 status;
-      
       // Do a read or write as long as no other read or write is in progress
       if ( simpleBLEDoWrite )
       {
@@ -500,8 +505,7 @@ static void simpleBLECentral_HandleKeys( uint8 shift, uint8 keys )
   
   if ( keys & HAL_KEY_CENTER )
   {
-    uint8 addrType;
-    uint8 *peerAddr;
+    
     
     // Connect or disconnect
     if ( simpleBLEState == BLE_STATE_IDLE )
@@ -510,7 +514,7 @@ static void simpleBLECentral_HandleKeys( uint8 shift, uint8 keys )
       if ( simpleBLEScanRes > 0 )
       {
         // connect to current device in scan result
-        peerAddr = simpleBLEDevList[simpleBLEScanIdx].addr;
+        peerAddr = &simpleBLEDevList[simpleBLEScanIdx].addr;
         addrType = simpleBLEDevList[simpleBLEScanIdx].addrType;
       
         simpleBLEState = BLE_STATE_CONNECTING;
@@ -565,6 +569,8 @@ static void simpleBLECentral_HandleKeys( uint8 shift, uint8 keys )
  */
 void simpleBLECentralProcessGATTMsg( gattMsgEvent_t *pMsg )
 {
+  gattMsgEvent_t *pMessage =  pMsg;
+  if(pMessage){
   if ( simpleBLEState != BLE_STATE_CONNECTED )
   {
     // In case a GATT message came after a connection has dropped,
@@ -572,34 +578,34 @@ void simpleBLECentralProcessGATTMsg( gattMsgEvent_t *pMsg )
     return;
   }
   
-  if ( ( pMsg->method == ATT_READ_RSP ) ||
-       ( ( pMsg->method == ATT_ERROR_RSP ) &&
-         ( pMsg->msg.errorRsp.reqOpcode == ATT_READ_REQ ) ) )
+  if ( ( pMessage->method == ATT_READ_RSP ) ||
+       ( ( pMessage->method == ATT_ERROR_RSP ) &&
+         ( pMessage->msg.errorRsp.reqOpcode == ATT_READ_REQ ) ) )
   {
-    if ( pMsg->method == ATT_ERROR_RSP )
+    if ( pMessage->method == ATT_ERROR_RSP )
     {
-      uint8 status = pMsg->msg.errorRsp.errCode;
+      uint8 status = pMessage->msg.errorRsp.errCode;
       
       LCD_WRITE_STRING_VALUE( "Read Error", status, 10, HAL_LCD_LINE_1 );
     }
     else
     {
       // After a successful read, display the read value
-      uint8 valueRead = pMsg->msg.readRsp.value[0];
+      uint8 valueRead = pMessage->msg.readRsp.value[0];
 
       LCD_WRITE_STRING_VALUE( "Read rsp:", valueRead, 10, HAL_LCD_LINE_1 );
     }
     
     simpleBLEProcedureInProgress = FALSE;
   }
-  else if ( ( pMsg->method == ATT_WRITE_RSP ) ||
-       ( ( pMsg->method == ATT_ERROR_RSP ) &&
-         ( pMsg->msg.errorRsp.reqOpcode == ATT_WRITE_REQ ) ) )
+  else if ( ( pMessage->method == ATT_WRITE_RSP ) ||
+       ( ( pMessage->method == ATT_ERROR_RSP ) &&
+         ( pMessage->msg.errorRsp.reqOpcode == ATT_WRITE_REQ ) ) )
   {
     
-    if ( pMsg->method == ATT_ERROR_RSP == ATT_ERROR_RSP )
+    if ( pMessage->method == ATT_ERROR_RSP == ATT_ERROR_RSP )
     {
-      uint8 status = pMsg->msg.errorRsp.errCode;
+      uint8 status = pMessage->msg.errorRsp.errCode;
       
       LCD_WRITE_STRING_VALUE( "Write Error", status, 10, HAL_LCD_LINE_1 );
     }
@@ -614,9 +620,10 @@ void simpleBLECentralProcessGATTMsg( gattMsgEvent_t *pMsg )
   }
   else if ( simpleBLEDiscState != BLE_DISC_STATE_IDLE )
   {
-    simpleBLEGATTDiscoveryEvent( pMsg );
+    simpleBLEGATTDiscoveryEvent( pMessage );
   }
-  
+  }
+  return;
 }
 
 /*********************************************************************
@@ -645,12 +652,14 @@ static void simpleBLECentralRssiCB( uint16 connHandle, int8 rssi )
  */
 static void simpleBLECentralEventCB( gapCentralRoleEvent_t *pEvent )
 {
-  switch ( pEvent->gap.opcode )
+  gapCentralRoleEvent_t *pBLEEvent = pEvent;
+  if(pBLEEvent){
+  switch ( pBLEEvent->gap.opcode )
   {
     case GAP_DEVICE_INIT_DONE_EVENT:  
       {
         LCD_WRITE_STRING( "BLE Central", HAL_LCD_LINE_1 );
-        LCD_WRITE_STRING( bdAddr2Str( pEvent->initDone.devAddr ),  HAL_LCD_LINE_2 );
+        LCD_WRITE_STRING( bdAddr2Str( pBLEEvent->initDone.devAddr ),  HAL_LCD_LINE_2 );
       }
       break;
 
@@ -660,10 +669,10 @@ static void simpleBLECentralEventCB( gapCentralRoleEvent_t *pEvent )
         if ( DEFAULT_DEV_DISC_BY_SVC_UUID == TRUE )
         {
           if ( simpleBLEFindSvcUuid( SIMPLEPROFILE_SERV_UUID,
-                                     pEvent->deviceInfo.pEvtData,
-                                     pEvent->deviceInfo.dataLen ) )
+                                     pBLEEvent->deviceInfo.pEvtData,
+                                     pBLEEvent->deviceInfo.dataLen ) )
           {
-            simpleBLEAddDeviceInfo( pEvent->deviceInfo.addr, pEvent->deviceInfo.addrType );
+            simpleBLEAddDeviceInfo( pBLEEvent->deviceInfo.addr, pBLEEvent->deviceInfo.addrType );
           }
         }
       }
@@ -678,9 +687,9 @@ static void simpleBLECentralEventCB( gapCentralRoleEvent_t *pEvent )
         if ( DEFAULT_DEV_DISC_BY_SVC_UUID == FALSE )
         {
           // Copy results
-          simpleBLEScanRes = pEvent->discCmpl.numDevs;
-          osal_memcpy( simpleBLEDevList, pEvent->discCmpl.pDevList,
-                       (sizeof( gapDevRec_t ) * pEvent->discCmpl.numDevs) );
+          simpleBLEScanRes = pBLEEvent->discCmpl.numDevs;
+          osal_memcpy( simpleBLEDevList, pBLEEvent->discCmpl.pDevList,
+                       (sizeof( gapDevRec_t ) * pBLEEvent->discCmpl.numDevs) );
         }
         
         LCD_WRITE_STRING_VALUE( "Devices Found", simpleBLEScanRes,
@@ -698,10 +707,10 @@ static void simpleBLECentralEventCB( gapCentralRoleEvent_t *pEvent )
 
     case GAP_LINK_ESTABLISHED_EVENT:
       {
-        if ( pEvent->gap.hdr.status == SUCCESS )
+        if ( pBLEEvent->gap.hdr.status == SUCCESS )
         {          
           simpleBLEState = BLE_STATE_CONNECTED;
-          simpleBLEConnHandle = pEvent->linkCmpl.connectionHandle;
+          simpleBLEConnHandle = pBLEEvent->linkCmpl.connectionHandle;
           simpleBLEProcedureInProgress = TRUE;    
 
           // If service discovery not performed initiate service discovery
@@ -711,7 +720,7 @@ static void simpleBLECentralEventCB( gapCentralRoleEvent_t *pEvent )
           }
                     
           LCD_WRITE_STRING( "Connected", HAL_LCD_LINE_1 );
-          LCD_WRITE_STRING( bdAddr2Str( pEvent->linkCmpl.devAddr ), HAL_LCD_LINE_2 );   
+          LCD_WRITE_STRING( bdAddr2Str( pBLEEvent->linkCmpl.devAddr ), HAL_LCD_LINE_2 );   
         }
         else
         {
@@ -721,7 +730,7 @@ static void simpleBLECentralEventCB( gapCentralRoleEvent_t *pEvent )
           simpleBLEDiscState = BLE_DISC_STATE_IDLE;
           
           LCD_WRITE_STRING( "Connect Failed", HAL_LCD_LINE_1 );
-          LCD_WRITE_STRING_VALUE( "Reason:", pEvent->gap.hdr.status, 10, HAL_LCD_LINE_2 );
+          LCD_WRITE_STRING_VALUE( "Reason:", pBLEEvent->gap.hdr.status, 10, HAL_LCD_LINE_2 );
         }
       }
       break;
@@ -736,7 +745,7 @@ static void simpleBLECentralEventCB( gapCentralRoleEvent_t *pEvent )
         simpleBLEProcedureInProgress = FALSE;
           
         LCD_WRITE_STRING( "Disconnected", HAL_LCD_LINE_1 );
-        LCD_WRITE_STRING_VALUE( "Reason:", pEvent->linkTerminate.reason,
+        LCD_WRITE_STRING_VALUE( "Reason:", pBLEEvent->linkTerminate.reason,
                                 10, HAL_LCD_LINE_2 );
       }
       break;
@@ -751,7 +760,8 @@ static void simpleBLECentralEventCB( gapCentralRoleEvent_t *pEvent )
       break;
   }
 }
-
+return;
+}
 /*********************************************************************
  * @fn      pairStateCB
  *
