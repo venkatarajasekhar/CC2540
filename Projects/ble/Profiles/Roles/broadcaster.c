@@ -293,10 +293,12 @@ bStatus_t GAPRole_SetParameter( uint16 param, uint8 len, void *pValue )
 bStatus_t GAPRole_GetParameter( uint16 param, void *pValue )
 {
   bStatus_t ret = SUCCESS;
+  uint8 gapRoleVar =*((uint8*)pValue);
+  uint16 gapRoleVarValue =*((uint16*)pValue);
   switch ( param )
   {
     case GAPROLE_PROFILEROLE:
-      *((uint8*)pValue) = gapRole_profileRole;
+       gapRoleVar = gapRole_profileRole;
       break;
 
     case GAPROLE_BD_ADDR:
@@ -304,11 +306,11 @@ bStatus_t GAPRole_GetParameter( uint16 param, void *pValue )
       break;
 
     case GAPROLE_ADVERT_ENABLED:
-      *((uint8*)pValue) = gapRole_AdvEnabled;
+     gapRoleVar= gapRole_AdvEnabled;
       break;
 
     case GAPROLE_ADVERT_OFF_TIME:
-      *((uint16*)pValue) = gapRole_AdvertOffTime;
+      gapRoleVar = gapRole_AdvertOffTime;
       break;
 
     case GAPROLE_ADVERT_DATA:
@@ -320,11 +322,11 @@ bStatus_t GAPRole_GetParameter( uint16 param, void *pValue )
       break;
 
     case GAPROLE_ADV_EVENT_TYPE:
-      *((uint8*)pValue) = gapRole_AdvEventType;
+      gapRoleVar= gapRole_AdvEventType;
       break;
 
     case GAPROLE_ADV_DIRECT_TYPE:
-      *((uint8*)pValue) = gapRole_AdvDirectType;
+      gapRoleVar = gapRole_AdvDirectType;
       break;
 
     case GAPROLE_ADV_DIRECT_ADDR:
@@ -332,18 +334,18 @@ bStatus_t GAPRole_GetParameter( uint16 param, void *pValue )
       break;
 
     case GAPROLE_ADV_CHANNEL_MAP:
-      *((uint8*)pValue) = gapRole_AdvChanMap;
+      gapRoleVar = gapRole_AdvChanMap;
       break;
 
     case GAPROLE_ADV_FILTER_POLICY:
-      *((uint8*)pValue) = gapRole_AdvFilterPolicy;
+      gapRoleVar = gapRole_AdvFilterPolicy;
       break;
 
     default:
       // The param value isn't part of this profile, try the GAP.
       if ( param < TGAP_PARAMID_MAX )
       {
-        *((uint16*)pValue) = GAP_GetParamValue( param );
+        gapRoleVarValue = GAP_GetParamValue( param );
       }
       else
       {
