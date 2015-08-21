@@ -22,7 +22,7 @@
   its documentation for any purpose.
 
   YOU FURTHER ACKNOWLEDGE AND AGREE THAT THE SOFTWARE AND DOCUMENTATION ARE
-  PROVIDED ìAS ISî WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+  PROVIDED ‚ÄúAS IS‚Äù WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED,
   INCLUDING WITHOUT LIMITATION, ANY WARRANTY OF MERCHANTABILITY, TITLE,
   NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT SHALL
   TEXAS INSTRUMENTS OR ITS LICENSORS BE LIABLE OR OBLIGATED UNDER CONTRACT,
@@ -143,12 +143,14 @@ static void gapRole_SetupGAP( void );
 bStatus_t GAPRole_SetParameter( uint16 param, uint8 len, void *pValue )
 {
   bStatus_t ret = SUCCESS;
+  uint8 oldAdvEnabled = gapRole_AdvEnabled;
+  
   switch ( param )
   {
     case GAPROLE_ADVERT_ENABLED:
       if ( len == sizeof( uint8 ) )
       {
-        uint8 oldAdvEnabled = gapRole_AdvEnabled;
+        
         gapRole_AdvEnabled = *((uint8*)pValue);
 
         if ( (oldAdvEnabled) && (gapRole_AdvEnabled == FALSE) )
