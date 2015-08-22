@@ -22,7 +22,7 @@
   its documentation for any purpose.
 
   YOU FURTHER ACKNOWLEDGE AND AGREE THAT THE SOFTWARE AND DOCUMENTATION ARE
-  PROVIDED “AS IS” WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+  PROVIDED â€œAS ISâ€ WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED,
   INCLUDING WITHOUT LIMITATION, ANY WARRANTY OF MERCHANTABILITY, TITLE,
   NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT SHALL
   TEXAS INSTRUMENTS OR ITS LICENSORS BE LIABLE OR OBLIGATED UNDER CONTRACT,
@@ -199,8 +199,8 @@ uint16 SimpleBLEObserver_ProcessEvent( uint8 task_id, uint16 events )
   
   if ( events & SYS_EVENT_MSG )
   {
-    uint8 *pMsg;
-
+    uint8 *pMsg = NULL;
+    if(pMsg){
     if ( (pMsg = osal_msg_receive( simpleBLETaskId )) != NULL )
     {
       simpleBLEObserver_ProcessOSALMsg( (osal_event_hdr_t *)pMsg );
@@ -212,7 +212,8 @@ uint16 SimpleBLEObserver_ProcessEvent( uint8 task_id, uint16 events )
     // return unprocessed events
     return (events ^ SYS_EVENT_MSG);
   }
-
+  return;
+  }
   if ( events & START_DEVICE_EVT )
   {
     // Start the Device
@@ -236,15 +237,19 @@ uint16 SimpleBLEObserver_ProcessEvent( uint8 task_id, uint16 events )
  */
 static void simpleBLEObserver_ProcessOSALMsg( osal_event_hdr_t *pMsg )
 {
-  switch ( pMsg->event )
+  osal_event_hdr_t *pMessage = pMsg ;
+  if(pMessage){
+  switch ( pMessage->event )
   {
     case KEY_CHANGE:
-      simpleBLEObserver_HandleKeys( ((keyChange_t *)pMsg)->state, ((keyChange_t *)pMsg)->keys );
+      simpleBLEObserver_HandleKeys( ((keyChange_t *)pMessage)->state, ((keyChange_t *)pMessage)->keys );
       break;
 
     case GATT_MSG_EVENT:
       break;
   }
+}
+ return;
 }
 
 /*********************************************************************
@@ -328,18 +333,19 @@ static void simpleBLEObserver_HandleKeys( uint8 shift, uint8 keys )
  */
 static void simpleBLEObserverEventCB( gapObserverRoleEvent_t *pEvent )
 {
-  switch ( pEvent->gap.opcode )
+  gapObserverRoleEvent_t *pRoleEvent = pEvent;
+  switch ( pRoleEvent->gap.opcode )
   {
     case GAP_DEVICE_INIT_DONE_EVENT:  
       {
         LCD_WRITE_STRING( "BLE Observer", HAL_LCD_LINE_1 );
-        LCD_WRITE_STRING( bdAddr2Str( pEvent->initDone.devAddr ),  HAL_LCD_LINE_2 );
+        LCD_WRITE_STRING( bdAddr2Str( pRoleEvent->initDone.devAddr ),  HAL_LCD_LINE_2 );
       }
       break;
 
     case GAP_DEVICE_INFO_EVENT:
       {
-        simpleBLEAddDeviceInfo( pEvent->deviceInfo.addr, pEvent->deviceInfo.addrType );
+        simpleBLEAddDeviceInfo( pRoleEvent->deviceInfo.addr, pRoleEvent->deviceInfo.addrType );
       }
       break;
       
@@ -349,9 +355,9 @@ static void simpleBLEObserverEventCB( gapObserverRoleEvent_t *pEvent )
         simpleBLEScanning = FALSE;
 
         // Copy results
-        simpleBLEScanRes = pEvent->discCmpl.numDevs;
-        osal_memcpy( simpleBLEDevList, pEvent->discCmpl.pDevList,
-                     (sizeof( gapDevRec_t ) * pEvent->discCmpl.numDevs) );
+        simpleBLEScanRes = pRoleEvent->discCmpl.numDevs;
+        osal_memcpy( simpleBLEDevList, pRoleEvent->discCmpl.pDevList,
+                     (sizeof( gapDevRec_t ) * pRoleEvent->discCmpl.numDevs) );
         
         LCD_WRITE_STRING_VALUE( "Devices Found", simpleBLEScanRes,
                                 10, HAL_LCD_LINE_1 );
@@ -380,10 +386,11 @@ static void simpleBLEObserverEventCB( gapObserverRoleEvent_t *pEvent )
 static void simpleBLEAddDeviceInfo( uint8 *pAddr, uint8 addrType )
 {
   uint8 i;
-  
+  uint8 *pAddrForDevice = pAddr;
   // If result count not at max
   if ( simpleBLEScanRes < DEFAULT_MAX_SCAN_RES )
   {
+    if(pAddrForDevice){
     // Check if device is already in scan results
     for ( i = 0; i < simpleBLEScanRes; i++ )
     {
@@ -392,7 +399,10 @@ static void simpleBLEAddDeviceInfo( uint8 *pAddr, uint8 addrType )
         return;
       }
     }
-    
+    }
+    else{
+    return;
+    }
     // Add addr to scan result list
     osal_memcpy( simpleBLEDevList[simpleBLEScanRes].addr, pAddr, B_ADDR_LEN );
     simpleBLEDevList[simpleBLEScanRes].addrType = addrType;
@@ -415,10 +425,11 @@ char *bdAddr2Str( uint8 *pAddr )
   char        hex[] = "0123456789ABCDEF";
   static char str[B_ADDR_STR_LEN];
   char        *pStr = str;
-  
+  uint8 *pBTDevAddr = pAddr;
   *pStr++ = '0';
   *pStr++ = 'x';
-  
+  //For Valid Device Address
+  if(pBTDevAddr){
   // Start from end of addr
   pAddr += B_ADDR_LEN;
   
@@ -427,10 +438,15 @@ char *bdAddr2Str( uint8 *pAddr )
     *pStr++ = hex[*--pAddr >> 4];
     *pStr++ = hex[*pAddr & 0x0F];
   }
-  
-  *pStr = 0;
-  
-  return str;
+   *pStr = 0;
+    return str;
+  }
+  else{
+    *pStr = 0;
+     pAddr = NULL;
+    return str;
+  }
+ 
 }
 
 /*********************************************************************
