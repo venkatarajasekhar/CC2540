@@ -23,7 +23,7 @@
   its documentation for any purpose.
 
   YOU FURTHER ACKNOWLEDGE AND AGREE THAT THE SOFTWARE AND DOCUMENTATION ARE
-  PROVIDED “AS IS” WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+  PROVIDED â€œAS ISâ€ WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED,
   INCLUDING WITHOUT LIMITATION, ANY WARRANTY OF MERCHANTABILITY, TITLE,
   NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT SHALL
   TEXAS INSTRUMENTS OR ITS LICENSORS BE LIABLE OR OBLIGATED UNDER CONTRACT,
@@ -280,7 +280,7 @@ static const uint8 bloodPressureFlags[FLAGS_IDX_MAX] =
 };
 
 // Program State
-enum
+enum BLE_Bpm_DeviceStatus
 {
   BPM_STATE_IDLE,            
   BPM_STATE_ADVERTISING,              
@@ -288,7 +288,7 @@ enum
 };
 
 // Measurement State
-enum
+enum BLE_Bpm_DeviceMeasureStatus
 {
   BPM_MEAS_STATE_IDLE,            
   BPM_MEAS_STATE_ACTIVE,             
@@ -625,6 +625,8 @@ uint16 BloodPressure_ProcessEvent( uint8 task_id, uint16 events )
  */
 static void bloodPressure_ProcessOSALMsg( osal_event_hdr_t *pMsg )
 {
+  osal_event_hdr_t *pMessageEvent = pMsg;
+  if(pMessageEvent){
   switch ( pMsg->event )
   {
   case KEY_CHANGE:
@@ -635,10 +637,13 @@ static void bloodPressure_ProcessOSALMsg( osal_event_hdr_t *pMsg )
       bloodPressureProcessGattMsg( (gattMsgEvent_t *) pMsg );
       break;
   default:
+        pMsg = NULL;
       break;
   }
 }
-
+ pMsg = NULL;
+ return;
+}
 /*********************************************************************
  * @fn      bloodPressure_HandleKeys
  *
@@ -653,7 +658,8 @@ static void bloodPressure_ProcessOSALMsg( osal_event_hdr_t *pMsg )
  */
 static void bloodPressure_HandleKeys( uint8 shift, uint8 keys )
 {
- 
+  uint8 current_adv_enabled_status;
+  uint8 new_adv_enabled_status;
   if ( keys & HAL_KEY_SW_1 )
   {
     // set simulated measurement flag index
@@ -669,8 +675,7 @@ static void bloodPressure_HandleKeys( uint8 shift, uint8 keys )
     // advertising on and off and start a measurement
     if( gapProfileState != GAPROLE_CONNECTED )
     {
-      uint8 current_adv_enabled_status;
-      uint8 new_adv_enabled_status;
+      
       
       //Find the current GAP advertisement status
       GAPRole_GetParameter( GAPROLE_ADVERT_ENABLED, &current_adv_enabled_status );
@@ -708,8 +713,8 @@ static void bpFinalMeas(void)
 {
     
   // att value notification structure 
-  uint8 *p = bloodPressureMeas.value;
-  
+  uint8 *p = &(bloodPressureMeas.value);
+  UTCTimeStruct time;
   //flags
   uint8 flags = bloodPressureFlags[bloodPressureFlagsIdx];
   
@@ -728,9 +733,7 @@ static void bpFinalMeas(void)
   if (flags & BLOODPRESSURE_FLAGS_TIMESTAMP)
   {
    
-    UTCTimeStruct time;
-  
-    // Get time structure from OSAL
+        // Get time structure from OSAL
     osal_ConvertUTCTime( &time, osal_getClock() );
       
     *p++ = 0x07;
@@ -783,7 +786,8 @@ static void bpFinalMeas(void)
  */
 static void bpStoreIndications(attHandleValueInd_t* pInd)
 {
-
+    attHandleValueInd_t* bpIndication = pInd;
+    if(bpIndication){
     //store measurement
     osal_memcpy(&bpStoreMeas[bpStoreIndex],pInd, ATT_MTU_SIZE);
     
@@ -803,7 +807,9 @@ static void bpStoreIndications(attHandleValueInd_t* pInd)
       }
     }  
 }
-
+ pInd = NULL;
+ return;
+}
 
 /*********************************************************************
  * @fn      bpSendStoredMeas
@@ -897,7 +903,7 @@ static void timeAppDisconnected( void )
   timeAppDiscState = DISC_IDLE;
   timeAppPairingStarted = FALSE;
   timeAppDiscPostponed = FALSE;
-  
+  uint8 advEnable = FALSE;
    
   // stop periodic measurement
   osal_stop_timerEx( bloodPressureTaskId, BP_TIMER_CUFF_EVT ); 
@@ -911,7 +917,7 @@ static void timeAppDisconnected( void )
   BloodPressure_SetParameter(BLOODPRESSURE_IMEAS_CHAR_CFG, sizeof(uint16), (uint8 *) &param);
 
   
-  uint8 advEnable = FALSE;
+  
   
   //disable advertising on disconnect
   GAPRole_SetParameter( GAPROLE_ADVERT_ENABLED, sizeof( uint8 ), &advEnable );
@@ -929,13 +935,13 @@ static void timeAppDisconnected( void )
  */
 static void peripheralStateNotificationCB( gaprole_States_t newState )
 {
- 
+ linkDBItem_t  *pItem = NULL;
   
   
   // if connected
   if ( newState == GAPROLE_CONNECTED )
   {
-    linkDBItem_t  *pItem;
+    
 
     
     HalLedSet ( HAL_LED_1, HAL_LED_MODE_OFF );
@@ -1030,6 +1036,7 @@ static void bpServiceCB(uint8 event)
   default:  
     break;
   }
+  
 }
 
 
@@ -1106,7 +1113,7 @@ static void cuffMeas(void)
   HalLedSet ( HAL_LED_4, HAL_LED_MODE_BLINK );
   
   // att value notification structure 
-  uint8 *p = bloodPressureIMeas.value;
+  uint8 *p = &(bloodPressureIMeas.value);
   
   //flags
   uint8 flags = BLOODPRESSURE_FLAGS_MMHG |BLOODPRESSURE_FLAGS_PULSE | BLOODPRESSURE_FLAGS_USER| BLOODPRESSURE_FLAGS_STATUS;
@@ -1115,7 +1122,7 @@ static void cuffMeas(void)
   *p++ = flags;
 
   //bloodpressure components 
-  // IEEE The 16–bit value contains a 4-bit exponent to base 10, 
+  // IEEE The 16â€“bit value contains a 4-bit exponent to base 10, 
   // followed by a 12-bit mantissa. Each is in twoscomplementform.
   *p++ = bpSystolic;  //120 = 0x0078  SFloat little endian = 0x7800 
   *p++;
