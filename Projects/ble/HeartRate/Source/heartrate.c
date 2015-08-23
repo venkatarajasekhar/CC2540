@@ -22,7 +22,7 @@ Copyright 2011 Texas Instruments Incorporated. All rights reserved.
   its documentation for any purpose.
 
   YOU FURTHER ACKNOWLEDGE AND AGREE THAT THE SOFTWARE AND DOCUMENTATION ARE
-  PROVIDED “AS IS” WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED, 
+  PROVIDED â€œAS ISâ€ WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED, 
   INCLUDING WITHOUT LIMITATION, ANY WARRANTY OF MERCHANTABILITY, TITLE, 
   NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT SHALL
   TEXAS INSTRUMENTS OR ITS LICENSORS BE LIABLE OR OBLIGATED UNDER CONTRACT,
@@ -431,12 +431,20 @@ uint16 HeartRate_ProcessEvent( uint8 task_id, uint16 events )
  */
 static void heartRate_ProcessOSALMsg( osal_event_hdr_t *pMsg )
 {
+  osal_event_hdr_t *pMessageEvtHdlr = pMsg;
+  if(pMessageEvtHdlr){
   switch ( pMsg->event )
   {
     case KEY_CHANGE:
       heartRate_HandleKeys( ((keyChange_t *)pMsg)->state, ((keyChange_t *)pMsg)->keys );
       break;
+      default: 
+            pMsg = NULL;   
+    break;
+    }
   }
+   pMsg = NULL;
+   return;
 }
 
 /*********************************************************************
