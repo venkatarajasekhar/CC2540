@@ -22,7 +22,7 @@
   its documentation for any purpose.
 
   YOU FURTHER ACKNOWLEDGE AND AGREE THAT THE SOFTWARE AND DOCUMENTATION ARE
-  PROVIDED ìAS ISî WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+  PROVIDED ‚ÄúAS IS‚Äù WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED,
   INCLUDING WITHOUT LIMITATION, ANY WARRANTY OF MERCHANTABILITY, TITLE,
   NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT SHALL
   TEXAS INSTRUMENTS OR ITS LICENSORS BE LIABLE OR OBLIGATED UNDER CONTRACT,
@@ -52,7 +52,7 @@ extern "C"
 /*********************************************************************
  * CONSTANTS
  */
-
+/*
 // Glucose App discovery states
 enum
 {
@@ -92,6 +92,45 @@ enum
   
   HDL_CACHE_LEN
 };
+*/
+typedef enum
+{
+  DISC_IDLE = 0x00,                       // Idle state
+  
+  DISC_GLUCOSE_START = 0x10,            // Current glucose service
+  DISC_GLUCOSE_SVC,                     // Discover service
+  DISC_GLUCOSE_CHAR,                    // Discover all characteristics
+  DISC_GLUCOSE_CCCD,                    // Discover glucose CCCD
+  DISC_GLUCOSE_CONTEXT_CCCD,            // Discover context CCCD
+  DISC_GLUCOSE_CTL_PNT_CCCD,            // Discover record control point CCCD  
+  
+  DISC_DEVINFO_START = 0x20,
+  DISC_DEVINFO_SVC,
+  DISC_DEVINFO_CHAR,
+ 
+  DISC_FAILED = 0xFF                      // Discovery failed
+} App_DISC_status;
+
+
+// Glucose handle cache indexes
+typedef enum
+{
+  HDL_GLUCOSE_START,
+  HDL_GLUCOSE_END,
+  HDL_GLUCOSE_MEAS_CCCD,
+  HDL_GLUCOSE_CONTEXT_START,
+  HDL_GLUCOSE_CONTEXT_END,
+  HDL_GLUCOSE_CONTEXT_CCCD,
+  HDL_GLUCOSE_FEATURE,
+  HDL_GLUCOSE_CTL_PNT_START,
+  HDL_GLUCOSE_CTL_PNT_END,
+  HDL_GLUCOSE_CTL_PNT_CCCD,
+  HDL_DEVINFO_SYSTEM_ID,
+  HDL_DEVINFO_MODEL_NUM,
+  HDL_DEVINFO_MANUFACTURER_NAME,
+  
+  HDL_CACHE_LEN
+}App_HDL_Indx;
 
 // Configuration states
 #define GLUCOSE_CONFIG_START              0x00
