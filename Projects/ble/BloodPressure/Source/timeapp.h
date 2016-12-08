@@ -22,7 +22,7 @@
   its documentation for any purpose.
 
   YOU FURTHER ACKNOWLEDGE AND AGREE THAT THE SOFTWARE AND DOCUMENTATION ARE
-  PROVIDED ìAS ISî WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+  PROVIDED ‚ÄúAS IS‚Äù WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED,
   INCLUDING WITHOUT LIMITATION, ANY WARRANTY OF MERCHANTABILITY, TITLE,
   NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT SHALL
   TEXAS INSTRUMENTS OR ITS LICENSORS BE LIABLE OR OBLIGATED UNDER CONTRACT,
@@ -54,7 +54,7 @@ extern "C"
 /*********************************************************************
  * CONSTANTS
  */
-
+/*
 // Time App discovery states
 enum
 {
@@ -74,6 +74,26 @@ enum
   HDL_CURR_TIME_CT_TIME_CCCD,             // Current time CCCD
   HDL_CACHE_LEN
 };
+*/
+// Time App discovery states
+typedef enum
+{
+  DISC_IDLE = 0x00,                       // Idle state
+  DISC_CURR_TIME_START = 0x10,            // Current time service
+  DISC_CURR_TIME_SVC,                     // Discover service
+  DISC_CURR_TIME_CHAR,                    // Discover all characteristics
+  DISC_CURR_TIME_CT_TIME_CCCD,            // Discover CT time CCCD
+  DISC_FAILED = 0xFF                      // Discovery failed
+}timeApp_DISC_status;
+
+// Time App handle cache indexes
+typedef enum
+{
+  HDL_CURR_TIME_CT_TIME_START,            // Current time start handle
+  HDL_CURR_TIME_CT_TIME_END,              // Current time end handle
+  HDL_CURR_TIME_CT_TIME_CCCD,             // Current time CCCD
+  HDL_CACHE_LEN
+}timeApp_HDL_TIME_Idx;
 
 // Configuration states
 #define TIMEAPP_CONFIG_START              0x00
